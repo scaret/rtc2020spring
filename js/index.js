@@ -1,5 +1,5 @@
-const gridWidth = 400;
-const gridHeight = 300;
+const gridWidth = 1200;
+const gridHeight = 900;
 
 function VideoGrid($elem){
     var self = this;
@@ -23,25 +23,20 @@ function VideoGrid($elem){
                 if(self.videoContainers[i].widthGrid > 1){
                     if (self.videoContainers.length == 1){
                         self.videoContainers[i].widthGrid -= 2;
-                    }else if (self.videoContainers.length == 5){
-                        self.videoContainers.forEach((container)=>{
-                            container.widthGrid -=1;
-                            container.calculateOccupies();
-                        })
                     }else{
                         self.videoContainers[i].widthGrid -= 1;
                     }
                     self.videoContainers[i].calculateOccupies();
                     putSuccess = self.putVideoContainerInitPosition(videoContainer);
+                    break;
                 }
             }
         }
-        videoContainer.$video.on('playing', ()=>{
-            self.$elem.append(videoContainer.$container);
-            self.videoContainers.push(videoContainer);
-            self.animatePositions();
-            console.log('appended');
-        });
+
+        window.videoContainer = videoContainer;
+        self.$elem.append(videoContainer.$container);
+        self.videoContainers.push(videoContainer);
+        self.animatePositions();
 
         const handleContainerAnimation = (evt)=>{
             console.log("handleContainerAnimation", evt);
@@ -58,12 +53,14 @@ function VideoGrid($elem){
         videoContainer.$container.draggable({
             grid: [gridWidth / 4, gridHeight / 4],
             stop: handleContainerAnimation,
+            containment: 'parent',
         });
 
         videoContainer.$container.resizable({
             grid: [gridWidth / 4, gridHeight / 4],
             aspectRatio: gridWidth / gridHeight,
             stop: handleContainerAnimation,
+            containment: 'parent',
         });
     };
 
@@ -121,6 +118,9 @@ function VideoGrid($elem){
 
 function VideoContainer(mediaObject, videoGrid){
     var self = this;
+    self.videoTrack = mediaObject.getVideoTracks()[0];
+    self.audioTrack = mediaObject.getAudioTracks()[0];
+    mediaObject.removeTrack(self.audioTrack);
     self.mediaObject = mediaObject;
     self.index = "" + videoGrid.index++;
     self.$video = $(`<video index="${self.index}" autoplay muted style="width: 100%;"></video>`);
@@ -131,12 +131,28 @@ function VideoContainer(mediaObject, videoGrid){
     });
     self.$container.append(self.$video);
     console.log("self.$container", self.$container)
-    $("#initVideoContainers").append(self.$container);
+
+    self.videoTrack.onended = function(){
+        self.destroy();
+    }
+
+    self.audioStream = new MediaStream();
+    self.audioStream.addTrack(self.audioTrack);
+    self.audioSource = audioContext.createMediaStreamSource(self.audioStream);
+    self.gainNode = audioContext.createGain();
+    self.audioSource.connect(self.gainNode);
+    self.gainNode.connect(audioContext.destination);
 
     self.widthGrid = 0;
     self.xGrid = 0;
     self.yGrid = 0;
     self.calculateOccupies = ()=>{
+        if (self.widthGrid  == 1){
+            self.gainNode.gain.value = 0.1;
+        }else{
+            self.gainNode.gain.value = self.widthGrid / 4;
+        }
+
         self.occupies = [];
         for (var i = self.xGrid; i < self.xGrid + self.widthGrid; i++){
             for (var j = self.yGrid; j < self.yGrid + self.widthGrid; j++){
@@ -145,6 +161,18 @@ function VideoContainer(mediaObject, videoGrid){
         }
         console.log("x", self.xGrid, "y", self.yGrid, "size", self.widthGrid, "occupies", self.occupies)
     }
+    self.destroy = function(){
+        console.log("Destroying container", self);
+        if (self.audioTrack){
+            self.audioTrack.stop();
+        }
+        if (self.gainNode){
+            self.gainNode.disconnect();
+        }
+        if (self.$container){
+            self.$container.remove();
+        }
+    };
 };
 
 let videoGrid = null;
@@ -164,6 +192,46 @@ async function main(){
     videoGrid = new VideoGrid($("#videoGrid"));
     await addOneVideoContainer();
 
+    const client = AgoraRTC.createClient({mode: 'live'});
+    client.init("0c0b4b61adf94de1befd7cdd78a50444", function(){
+        client.join("0c0b4b61adf94de1befd7cdd78a50444", cname, null, function(uid){
+            const localStream = AgoraRTC.createStream({streamID: uid, audio: true, video: true, screen: false});
+            localStream.setVideoProfile('480p_1');
+            localStream.init(function(){
+                console.log("localStream init success", localStream);
+                client.publish(localStream);
+            });
+        });
+    });
+    client.on('stream-added', function (evt) {
+        var stream = evt.stream;
+        console.log("Subscribe ", stream);
+        client.subscribe(stream, function (err) {
+            console.log("Subscribe stream failed", err);
+        });
+    });
+
+    client.on('stream-subscribed', function (evt) {
+        var stream = evt.stream;
+        console.log("Subscribe remote stream successfully: " + stream.getId());
+        const videoContainer = new VideoContainer(stream.stream, videoGrid);
+        videoContainer.uid = stream.getId();
+        videoGrid.addVideoContainer(videoContainer);
+    });
+
+    client.on('peer-leave', function (evt) {
+        console.log('peer-leave', evt);
+        for (var i in videoGrid.videoContainers){
+            const container = videoGrid.videoContainers[i];
+            if (container.uid === evt.uid){
+                console.log("Found uid in videoContainers", evt.uid, container);
+                container.destroy();
+                videoGrid.videoContainers.splice(i, 1);
+                break;
+            }
+        }
+
+    });
+
 }
 
-main();
