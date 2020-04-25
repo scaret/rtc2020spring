@@ -123,7 +123,7 @@ function VideoContainer(mediaObject, videoGrid){
     mediaObject.removeTrack(self.audioTrack);
     self.mediaObject = mediaObject;
     self.index = "" + videoGrid.index++;
-    self.$video = $(`<video index="${self.index}" autoplay muted style="width: 100%;"></video>`);
+    self.$video = $(`<video index="${self.index}" autoplay muted playsinline style="width: 100%;"></video>`);
     self.$video[0].srcObject = self.mediaObject;
     self.$container = $(`<div class="video-container" index="${self.index}" style="position: absolute; left: 0;"></div>`);
     self.$container.css({

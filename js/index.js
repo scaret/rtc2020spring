@@ -192,7 +192,7 @@ async function main(){
     videoGrid = new VideoGrid($("#videoGrid"));
     await addOneVideoContainer();
 
-    const client = AgoraRTC.createClient({mode: 'live'});
+    const client = AgoraRTC.createClient({mode: 'live', codec: 'vp8'});
     client.init("0c0b4b61adf94de1befd7cdd78a50444", function(){
         client.join("0c0b4b61adf94de1befd7cdd78a50444", cname, null, function(uid){
             const localStream = AgoraRTC.createStream({streamID: uid, audio: true, video: true, screen: false});
