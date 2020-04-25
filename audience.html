@@ -34,6 +34,7 @@
     <script src="js/volume-onoff.js"></script>
     <script>$("#go").click();</script>
     <script>$("#play").click(function(){
+        $("video").attr("playsinline", "playsinline");
         for(var i in $("video")){
             try{
                 $("video")[i].play();
