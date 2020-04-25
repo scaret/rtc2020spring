@@ -1,0 +1,35 @@
+<html>
+<head>
+    <meta charset="utf8">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="hidden" value="channel123" id="cname" class="form-control" placeholder="" aria-describedby="basic-addon2">
+                    <span class="input-group-btn" style="display: none">
+                        <button class="btn btn-success" type="button" id="go">Go!</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div id="videoGrid" style="border: 1px solid lightgray;position: relative;">
+        </div>
+
+
+    </div>
+
+    <script src="vendor/jquery/jquery-3.5.0.min.js"></script>
+    <script src="vendor/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="vendor/jquery-ui-1.12.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="vendor/bootstrap-3.4.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="vendor/bootstrap-3.4.1-dist/css/bootstrap-theme.min.css">
+    <script src="vendor/underscore/underscore-min.js"></script>
+    <script src="vendor/agora/AgoraRTCSDK-3.0.1.js"></script>
+    <script src="js/audience.js"></script>
+    <script src="js/volume-onoff.js"></script>
+    <script>$("#go").click();</script>
+</body>
+</html>
