@@ -1,6 +1,8 @@
 $sound = $("#sound");
-audioContext = new AudioContext();
-audioContext.suspend();
+if (window.AudioContext){
+    audioContext = new AudioContext();
+    audioContext.suspend();
+}
 $sound.on("click", function(){
     const state = $sound.attr("state") === "on" ? "off": "on";
     $sound.attr("state", state);

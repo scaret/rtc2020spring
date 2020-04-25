@@ -136,22 +136,11 @@ function VideoContainer(mediaObject, videoGrid){
         self.destroy();
     }
 
-    self.audioStream = new MediaStream();
-    self.audioStream.addTrack(self.audioTrack);
-    self.audioSource = audioContext.createMediaStreamSource(self.audioStream);
-    self.gainNode = audioContext.createGain();
-    self.audioSource.connect(self.gainNode);
-    self.gainNode.connect(audioContext.destination);
-
     self.widthGrid = 0;
     self.xGrid = 0;
     self.yGrid = 0;
     self.calculateOccupies = ()=>{
-        if (self.widthGrid  == 1){
-            self.gainNode.gain.value = 0.1;
-        }else{
-            self.gainNode.gain.value = self.widthGrid / 4;
-        }
+
 
         self.occupies = [];
         for (var i = self.xGrid; i < self.xGrid + self.widthGrid; i++){
@@ -165,9 +154,6 @@ function VideoContainer(mediaObject, videoGrid){
         console.log("Destroying container", self);
         if (self.audioTrack){
             self.audioTrack.stop();
-        }
-        if (self.gainNode){
-            self.gainNode.disconnect();
         }
         if (self.$container){
             self.$container.remove();
