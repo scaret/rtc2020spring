@@ -17,6 +17,7 @@
 
         <div id="videoGrid" style="border: 1px solid lightgray;position: relative;">
         </div>
+        <button class="btn btn-success" id="play">Play</button>
 
 
     </div>
@@ -31,5 +32,14 @@
     <script src="js/audience.js"></script>
     <script src="js/volume-onoff.js"></script>
     <script>$("#go").click();</script>
+    <script>$("#play").click(function(){
+        for(var i in $("video")){
+            try{
+                $("video")[i].play();
+            }catch(e){
+                console.error(e);
+            }
+        }
+    })</script>
 </body>
 </html>
