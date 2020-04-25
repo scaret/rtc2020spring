@@ -1,5 +1,5 @@
-const gridWidth = 1200;
-const gridHeight = 900;
+const gridWidth = $(".container").width();
+const gridHeight = $(".container").width() / 4 * 3;
 
 function VideoGrid($elem){
     var self = this;
